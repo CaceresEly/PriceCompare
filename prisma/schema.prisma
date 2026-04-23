@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model TrackedProduct {
+  id            String          @id @default(cuid())
+  query         String
+  normalizedKey String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  snapshots     PriceSnapshot[]
+}
+
+model PriceSnapshot {
+  id          String         @id @default(cuid())
+  productId   String
+  source      String
+  title       String
+  price       Float
+  shipping    Float          @default(0)
+  totalPrice  Float
+  productUrl  String
+  imageUrl    String?
+  capturedAt  DateTime       @default(now())
+
+  product     TrackedProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([capturedAt])
+  @@index([source])
+}
