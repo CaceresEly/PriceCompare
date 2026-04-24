@@ -35,7 +35,7 @@ export function PriceSummary({
             Price intelligence
           </h2>
           <p className="text-sm text-zinc-500">
-            Summary based on the current price history.
+            Summary based on the current search results.
           </p>
         </div>
 

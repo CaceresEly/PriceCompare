@@ -16,13 +16,19 @@ export function ProductCard({ product, isBestOffer = false }: ProductCardProps) 
         </span>
       )}
 
-      <Image
-        src={product.image}
-        alt={product.title}
-        width={500}
-        height={300}
-        className="mb-4 h-48 w-full rounded-xl object-cover"
+        {product.image ? (
+    <Image
+      src={product.image}
+      alt={product.title}
+      width={500}
+      height={300}
+      className="mb-4 h-48 w-full rounded-xl object-cover"
     />
+  ) : (
+    <div className="mb-4 flex h-48 w-full items-center justify-center rounded-xl bg-zinc-100 text-sm text-zinc-400">
+      No image available
+    </div>
+  )}
 
       <h3 className="text-lg font-semibold text-zinc-900">{product.title}</h3>
       <p className="mt-1 text-sm text-zinc-500">{product.store}</p>

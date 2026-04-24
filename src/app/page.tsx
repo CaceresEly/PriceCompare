@@ -6,36 +6,93 @@ import { SearchBar } from "@/components/SearchBar";
 import { Filters } from "@/components/Filters";
 import { ProductCard } from "@/components/ProductCard";
 import { PriceSummary } from "@/components/PriceSummary";
-import { products } from "@/data/products";
 import { getBestOffer, sortProducts } from "@/lib/utils";
 import { getPriceIntelligence } from "@/lib/priceIntelligence";
-import { SortOption } from "@/types/product";
+import { Product, SortOption } from "@/types/product";
+
+type ApiProduct = {
+  id: string;
+  source: string;
+  title: string;
+  price: number;
+  shipping: number;
+  totalPrice: number;
+  productUrl: string;
+  imageUrl: string | null;
+  capturedAt: string;
+};
 
 export default function Home() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("lowest-total");
   const [selectedStore, setSelectedStore] = useState("all");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  async function handleSearch(value: string) {
+    setSearch(value);
+
+    const query = value.trim();
+
+    if (!query) {
+      setProducts([]);
+      setHasSearched(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setHasSearched(true);
+
+    try {
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(query)}&limit=10`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to search products");
+      }
+
+      const data = await response.json();
+
+      const mappedProducts: Product[] = data.products.map(
+        (product: ApiProduct) => ({
+          id: product.id,
+          title: product.title,
+          store: product.source,
+          image: product.imageUrl ?? "",
+          price: product.price,
+          shipping: product.shipping,
+          rating: 4.5,
+          deliveryDays: 3,
+          productUrl: product.productUrl,
+          category: "external",
+        })
+      );
+
+      setProducts(mappedProducts);
+    } catch (error) {
+      console.error(error);
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const stores = useMemo(() => {
     return [...new Set(products.map((product) => product.store))];
-  }, []);
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     const filtered = products.filter((product) => {
-      const matchesSearch = product.title
-        .toLowerCase()
-        .includes(search.toLowerCase());
-
       const matchesStore =
         selectedStore === "all" || product.store === selectedStore;
 
-      return matchesSearch && matchesStore;
+      return matchesStore;
     });
 
     return sortProducts(filtered, sortBy);
-  }, [search, sortBy, selectedStore]);
-
-  const shouldShowPriceSummary = search.trim().length > 0;
+  }, [products, sortBy, selectedStore]);
 
   const bestOffer = getBestOffer(filteredProducts);
 
@@ -59,7 +116,7 @@ export default function Home() {
         <Header />
 
         <div className="mb-6 grid gap-4 md:grid-cols-[1fr_auto]">
-          <SearchBar value={search} onChange={setSearch} />
+          <SearchBar value={search} onChange={handleSearch} />
 
           <Filters
             sortBy={sortBy}
@@ -70,7 +127,20 @@ export default function Home() {
           />
         </div>
 
-        {shouldShowPriceSummary &&
+        {!hasSearched && (
+          <div className="mb-8 rounded-2xl border border-dashed border-zinc-300 bg-white p-5 text-sm text-zinc-500">
+            Search for a product to view real offers and price intelligence.
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="mb-8 rounded-2xl border border-zinc-200 bg-white p-5 text-sm text-zinc-500">
+            Searching products...
+          </div>
+        )}
+
+        {!isLoading &&
+          hasSearched &&
           priceIntelligence.currentBestOffer &&
           priceIntelligence.historicalLow && (
             <PriceSummary
@@ -81,13 +151,7 @@ export default function Home() {
             />
           )}
 
-        {!shouldShowPriceSummary && (
-          <div className="mb-8 rounded-2xl border border-dashed border-zinc-300 bg-white p-5 text-sm text-zinc-500">
-            Search for a product to view price intelligence.
-          </div>
-        )}
-
-        {filteredProducts.length === 0 ? (
+        {!isLoading && hasSearched && filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-zinc-500">
             No products found.
           </div>

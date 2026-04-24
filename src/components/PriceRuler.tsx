@@ -32,7 +32,7 @@ export function PriceRuler({
         <div>
           <p className="text-sm font-medium text-zinc-900">Price ruler</p>
           <p className="text-xs text-zinc-500">
-            Shows where the current best offer sits against the average price.
+            Shows where the current best offer sits among the current search results.
           </p>
         </div>
 
