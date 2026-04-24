@@ -31,8 +31,6 @@ export default function Home() {
   const [hasSearched, setHasSearched] = useState(false);
 
   async function handleSearch(value: string) {
-    setSearch(value);
-
     const query = value.trim();
 
     if (!query) {
@@ -116,7 +114,11 @@ export default function Home() {
         <Header />
 
         <div className="mb-6 grid gap-4 md:grid-cols-[1fr_auto]">
-          <SearchBar value={search} onChange={handleSearch} />
+          <SearchBar
+          value={search}
+          onChange={setSearch}
+          onSearch={() => handleSearch(search)}
+        />
 
           <Filters
             sortBy={sortBy}
