@@ -35,6 +35,8 @@ export default function Home() {
     return sortProducts(filtered, sortBy);
   }, [search, sortBy, selectedStore]);
 
+  const shouldShowPriceSummary = search.trim().length > 0;
+
   const bestOffer = getBestOffer(filteredProducts);
 
   const priceIntelligence = getPriceIntelligence(
@@ -68,7 +70,8 @@ export default function Home() {
           />
         </div>
 
-        {priceIntelligence.currentBestOffer &&
+        {shouldShowPriceSummary &&
+          priceIntelligence.currentBestOffer &&
           priceIntelligence.historicalLow && (
             <PriceSummary
               averagePrice={priceIntelligence.averagePrice}
@@ -77,6 +80,12 @@ export default function Home() {
               status={priceIntelligence.priceStatus}
             />
           )}
+
+        {!shouldShowPriceSummary && (
+          <div className="mb-8 rounded-2xl border border-dashed border-zinc-300 bg-white p-5 text-sm text-zinc-500">
+            Search for a product to view price intelligence.
+          </div>
+        )}
 
         {filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-zinc-500">
