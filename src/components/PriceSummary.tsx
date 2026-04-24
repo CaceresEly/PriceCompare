@@ -1,5 +1,6 @@
 import { PriceStatus } from "@/lib/priceIntelligence";
 import { formatCurrency } from "@/lib/utils";
+import { PriceRuler } from "@/components/PriceRuler";
 
 type PriceSummaryProps = {
   averagePrice: number;
@@ -67,6 +68,12 @@ export function PriceSummary({
           </p>
         </div>
       </div>
+
+      <PriceRuler
+        currentPrice={bestOffer}
+        averagePrice={averagePrice}
+        historicalLow={historicalLow}
+      />
     </section>
   );
 }
