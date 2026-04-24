@@ -19,18 +19,49 @@ export async function GET(request: Request) {
   try {
     const normalizedKey = normalizeProductKey(query);
 
-    const trackedProduct = await prisma.trackedProduct.upsert({
+    const existingProduct = await prisma.trackedProduct.findUnique({
       where: {
         normalizedKey,
       },
-      update: {
-        query,
-      },
-      create: {
-        query,
-        normalizedKey,
+      include: {
+        snapshots: {
+          orderBy: {
+            capturedAt: "desc",
+          },
+        },
       },
     });
+
+    if (existingProduct && existingProduct.snapshots.length > 0) {
+      const products = existingProduct.snapshots.map((snapshot) => ({
+        id: snapshot.id,
+        source: snapshot.source,
+        title: snapshot.title,
+        price: snapshot.price,
+        shipping: snapshot.shipping,
+        totalPrice: snapshot.totalPrice,
+        productUrl: snapshot.productUrl,
+        imageUrl: snapshot.imageUrl,
+        capturedAt: snapshot.capturedAt,
+      }));
+
+      return NextResponse.json({
+        query,
+        total: products.length,
+        trackedProductId: existingProduct.id,
+        source: "database",
+        products,
+      });
+    }
+
+    const trackedProduct =
+      existingProduct ??
+      (await prisma.trackedProduct.create({
+        data: {
+          query,
+          normalizedKey,
+        },
+      }));
 
     const products = await searchDummyJsonProducts(query, limit);
 
@@ -54,6 +85,7 @@ export async function GET(request: Request) {
       query,
       total: products.length,
       trackedProductId: trackedProduct.id,
+      source: "provider",
       products,
     });
   } catch (error) {
@@ -64,4 +96,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+}   
