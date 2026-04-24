@@ -5,8 +5,10 @@ import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
 import { Filters } from "@/components/Filters";
 import { ProductCard } from "@/components/ProductCard";
+import { PriceSummary } from "@/components/PriceSummary";
 import { products } from "@/data/products";
 import { getBestOffer, sortProducts } from "@/lib/utils";
+import { getPriceIntelligence } from "@/lib/priceIntelligence";
 import { SortOption } from "@/types/product";
 
 export default function Home() {
@@ -35,6 +37,20 @@ export default function Home() {
 
   const bestOffer = getBestOffer(filteredProducts);
 
+  const priceIntelligence = getPriceIntelligence(
+    filteredProducts.map((product) => ({
+      id: product.id,
+      source: product.store,
+      title: product.title,
+      price: product.price,
+      shipping: product.shipping,
+      totalPrice: product.price + product.shipping,
+      productUrl: product.productUrl,
+      imageUrl: product.image,
+      capturedAt: new Date(),
+    }))
+  );
+
   return (
     <main className="min-h-screen bg-zinc-50 px-6 py-10">
       <div className="mx-auto max-w-6xl">
@@ -42,6 +58,7 @@ export default function Home() {
 
         <div className="mb-6 grid gap-4 md:grid-cols-[1fr_auto]">
           <SearchBar value={search} onChange={setSearch} />
+
           <Filters
             sortBy={sortBy}
             setSortBy={setSortBy}
@@ -50,6 +67,16 @@ export default function Home() {
             stores={stores}
           />
         </div>
+
+        {priceIntelligence.currentBestOffer &&
+          priceIntelligence.historicalLow && (
+            <PriceSummary
+              averagePrice={priceIntelligence.averagePrice}
+              historicalLow={priceIntelligence.historicalLow.totalPrice}
+              bestOffer={priceIntelligence.currentBestOffer.totalPrice}
+              status={priceIntelligence.priceStatus}
+            />
+          )}
 
         {filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-zinc-500">
