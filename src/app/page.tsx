@@ -179,13 +179,13 @@ export default function Home() {
 
         {!hasSearched && (
           <div className="mb-8 rounded-2xl border border-dashed border-zinc-300 bg-white p-5 text-sm text-zinc-500">
-            Search for a product to view real offers and price intelligence.
+            Search for a product to compare real offers, analyze price history, and track price changes.
           </div>
         )}
 
         {isLoading && (
           <div className="mb-8 rounded-2xl border border-zinc-200 bg-white p-5 text-sm text-zinc-500">
-            Searching products...
+            Searching products and checking price history...
           </div>
         )}
 
