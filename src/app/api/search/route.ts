@@ -3,6 +3,12 @@ import { searchDummyJsonProducts } from "@/lib/providers/dummyJson";
 import { prisma } from "@/lib/prisma";
 import { normalizeProductKey } from "@/lib/normalizeProductKey";
 
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function isSnapshotStale(capturedAt: Date) {
+  return Date.now() - new Date(capturedAt).getTime() > CACHE_TTL_MS;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
@@ -32,7 +38,11 @@ export async function GET(request: Request) {
       },
     });
 
-    if (existingProduct && existingProduct.snapshots.length > 0) {
+    const latestSnapshot = existingProduct?.snapshots[0];
+    const hasFreshSnapshots =
+      latestSnapshot && !isSnapshotStale(latestSnapshot.capturedAt);
+
+    if (existingProduct && hasFreshSnapshots) {
       const products = existingProduct.snapshots.map((snapshot) => ({
         id: snapshot.id,
         source: snapshot.source,
@@ -50,6 +60,8 @@ export async function GET(request: Request) {
         total: products.length,
         trackedProductId: existingProduct.id,
         source: "database",
+        isStale: false,
+        lastUpdatedAt: latestSnapshot.capturedAt,
         products,
       });
     }
@@ -86,6 +98,8 @@ export async function GET(request: Request) {
       total: products.length,
       trackedProductId: trackedProduct.id,
       source: "provider",
+      isStale: true,
+      lastUpdatedAt: new Date(),
       products,
     });
   } catch (error) {
@@ -96,4 +110,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}   
+}
