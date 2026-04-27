@@ -7,6 +7,7 @@ import { Filters } from "@/components/Filters";
 import { ProductCard } from "@/components/ProductCard";
 import { PriceSummary } from "@/components/PriceSummary";
 import { SearchMetadata } from "@/components/SearchMetadata";
+import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import { getBestOffer, sortProducts } from "@/lib/utils";
 import { getPriceIntelligence } from "@/lib/priceIntelligence";
 import { Product, SortOption } from "@/types/product";
@@ -29,11 +30,17 @@ type SearchMetadataType = {
   lastUpdatedAt: string;
 };
 
+type PriceHistorySnapshot = {
+  totalPrice: number;
+  capturedAt: string;
+};
+
 export default function Home() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("lowest-total");
   const [selectedStore, setSelectedStore] = useState("all");
   const [products, setProducts] = useState<Product[]>([]);
+  const [history, setHistory] = useState<PriceHistorySnapshot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchMetadata, setSearchMetadata] =
@@ -44,6 +51,7 @@ export default function Home() {
 
     if (!query) {
       setProducts([]);
+      setHistory([]);
       setHasSearched(false);
       setSearchMetadata(null);
       return;
@@ -85,9 +93,21 @@ export default function Home() {
       );
 
       setProducts(mappedProducts);
+
+      const historyResponse = await fetch(
+        `/api/history?q=${encodeURIComponent(query)}`
+      );
+
+      if (historyResponse.ok) {
+        const historyData = await historyResponse.json();
+        setHistory(historyData.snapshots ?? []);
+      } else {
+        setHistory([]);
+      }
     } catch (error) {
       console.error(error);
       setProducts([]);
+      setHistory([]);
       setSearchMetadata(null);
     } finally {
       setIsLoading(false);
@@ -171,6 +191,12 @@ export default function Home() {
               status={priceIntelligence.priceStatus}
             />
           )}
+
+        {!isLoading && hasSearched && history.length > 0 && (
+          <div className="mb-8">
+            <PriceHistoryChart data={history} />
+          </div>
+        )}
 
         {!isLoading && hasSearched && filteredProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-zinc-500">
