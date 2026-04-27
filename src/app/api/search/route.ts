@@ -3,7 +3,7 @@ import { searchDummyJsonProducts } from "@/lib/providers/dummyJson";
 import { prisma } from "@/lib/prisma";
 import { normalizeProductKey } from "@/lib/normalizeProductKey";
 
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL_MS = 10 * 1000;
 
 function isSnapshotStale(capturedAt: Date) {
   return Date.now() - new Date(capturedAt).getTime() > CACHE_TTL_MS;
@@ -44,7 +44,8 @@ export async function GET(request: Request) {
 
     if (existingProduct && hasFreshSnapshots) {
       const products = existingProduct.snapshots.map((snapshot) => ({
-        id: snapshot.id,
+        id: snapshot.externalProductId ?? snapshot.id,
+        snapshotId: snapshot.id,
         source: snapshot.source,
         title: snapshot.title,
         price: snapshot.price,
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
         productUrl: snapshot.productUrl,
         imageUrl: snapshot.imageUrl,
         capturedAt: snapshot.capturedAt,
-      }));
+        }));
 
       return NextResponse.json({
         query,
@@ -80,15 +81,16 @@ export async function GET(request: Request) {
     if (products.length > 0) {
       await prisma.priceSnapshot.createMany({
         data: products.map((product) => ({
-          productId: trackedProduct.id,
-          source: product.source,
-          title: product.title,
-          price: product.price,
-          shipping: product.shipping,
-          totalPrice: product.totalPrice,
-          productUrl: product.productUrl,
-          imageUrl: product.imageUrl,
-          capturedAt: product.capturedAt,
+        productId: trackedProduct.id,
+        externalProductId: product.id,
+        source: product.source,
+        title: product.title,
+        price: product.price,
+        shipping: product.shipping,
+        totalPrice: product.totalPrice,
+        productUrl: product.productUrl,
+        imageUrl: product.imageUrl,
+        capturedAt: product.capturedAt,
         })),
       });
     }

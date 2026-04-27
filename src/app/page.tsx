@@ -14,6 +14,7 @@ import { Product, SortOption } from "@/types/product";
 
 type ApiProduct = {
   id: string;
+  snapshotId?: string;
   source: string;
   title: string;
   price: number;
@@ -94,9 +95,17 @@ export default function Home() {
 
       setProducts(mappedProducts);
 
-      const historyResponse = await fetch(
-        `/api/history?q=${encodeURIComponent(query)}`
-      );
+      const bestProduct = mappedProducts
+        .slice()
+        .sort((a, b) => a.price + a.shipping - (b.price + b.shipping))[0];
+
+      const historyUrl = bestProduct
+        ? `/api/history?q=${encodeURIComponent(query)}&externalProductId=${encodeURIComponent(
+            bestProduct.id
+          )}`
+        : `/api/history?q=${encodeURIComponent(query)}`;
+
+      const historyResponse = await fetch(historyUrl);
 
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();

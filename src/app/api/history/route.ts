@@ -6,6 +6,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   const query = searchParams.get("q") ?? "";
+  const externalProductId = searchParams.get("externalProductId");
 
   if (!query.trim()) {
     return NextResponse.json(
@@ -21,13 +22,6 @@ export async function GET(request: Request) {
       where: {
         normalizedKey,
       },
-      include: {
-        snapshots: {
-          orderBy: {
-            capturedAt: "asc",
-          },
-        },
-      },
     });
 
     if (!product) {
@@ -38,11 +32,27 @@ export async function GET(request: Request) {
       });
     }
 
+    const snapshots = await prisma.priceSnapshot.findMany({
+      where: {
+        productId: product.id,
+        ...(externalProductId
+          ? {
+              externalProductId,
+            }
+          : {}),
+      },
+      orderBy: {
+        capturedAt: "asc",
+      },
+    });
+
     return NextResponse.json({
       query,
-      total: product.snapshots.length,
-      snapshots: product.snapshots.map((snapshot) => ({
+      externalProductId,
+      total: snapshots.length,
+      snapshots: snapshots.map((snapshot) => ({
         id: snapshot.id,
+        externalProductId: snapshot.externalProductId,
         source: snapshot.source,
         title: snapshot.title,
         price: snapshot.price,

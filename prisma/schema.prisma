@@ -19,6 +19,7 @@ model TrackedProduct {
 model PriceSnapshot {
   id          String         @id @default(cuid())
   productId   String
+  externalProductId String?
   source      String
   title       String
   price       Float
