@@ -6,6 +6,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { Filters } from "@/components/Filters";
 import { ProductCard } from "@/components/ProductCard";
 import { PriceSummary } from "@/components/PriceSummary";
+import { SearchMetadata } from "@/components/SearchMetadata";
 import { getBestOffer, sortProducts } from "@/lib/utils";
 import { getPriceIntelligence } from "@/lib/priceIntelligence";
 import { Product, SortOption } from "@/types/product";
@@ -22,6 +23,12 @@ type ApiProduct = {
   capturedAt: string;
 };
 
+type SearchMetadataType = {
+  source: "database" | "provider";
+  isStale: boolean;
+  lastUpdatedAt: string;
+};
+
 export default function Home() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("lowest-total");
@@ -29,6 +36,8 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchMetadata, setSearchMetadata] =
+    useState<SearchMetadataType | null>(null);
 
   async function handleSearch(value: string) {
     const query = value.trim();
@@ -36,6 +45,7 @@ export default function Home() {
     if (!query) {
       setProducts([]);
       setHasSearched(false);
+      setSearchMetadata(null);
       return;
     }
 
@@ -52,6 +62,12 @@ export default function Home() {
       }
 
       const data = await response.json();
+
+      setSearchMetadata({
+        source: data.source,
+        isStale: data.isStale,
+        lastUpdatedAt: data.lastUpdatedAt,
+      });
 
       const mappedProducts: Product[] = data.products.map(
         (product: ApiProduct) => ({
@@ -72,6 +88,7 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       setProducts([]);
+      setSearchMetadata(null);
     } finally {
       setIsLoading(false);
     }
@@ -115,10 +132,10 @@ export default function Home() {
 
         <div className="mb-6 grid gap-4 md:grid-cols-[1fr_auto]">
           <SearchBar
-          value={search}
-          onChange={setSearch}
-          onSearch={() => handleSearch(search)}
-        />
+            value={search}
+            onChange={setSearch}
+            onSearch={() => handleSearch(search)}
+          />
 
           <Filters
             sortBy={sortBy}
@@ -128,6 +145,8 @@ export default function Home() {
             stores={stores}
           />
         </div>
+
+        {searchMetadata && <SearchMetadata {...searchMetadata} />}
 
         {!hasSearched && (
           <div className="mb-8 rounded-2xl border border-dashed border-zinc-300 bg-white p-5 text-sm text-zinc-500">
