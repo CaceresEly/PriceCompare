@@ -8,6 +8,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { PriceSummary } from "@/components/PriceSummary";
 import { SearchMetadata } from "@/components/SearchMetadata";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
+import { PriceAlertForm } from "@/components/PriceAlertForm";
 import { getBestOffer, sortProducts } from "@/lib/utils";
 import { getPriceIntelligence } from "@/lib/priceIntelligence";
 import { Product, SortOption } from "@/types/product";
@@ -179,7 +180,8 @@ export default function Home() {
 
         {!hasSearched && (
           <div className="mb-8 rounded-2xl border border-dashed border-zinc-300 bg-white p-5 text-sm text-zinc-500">
-            Search for a product to compare real offers, analyze price history, and track price changes.
+            Search for a product to compare real offers, analyze price history,
+            and track price changes.
           </div>
         )}
 
@@ -201,10 +203,19 @@ export default function Home() {
             />
           )}
 
+        {!isLoading &&
+          hasSearched &&
+          priceIntelligence.currentBestOffer && (
+            <PriceAlertForm
+              query={search}
+              externalProductId={priceIntelligence.currentBestOffer.id}
+              productTitle={priceIntelligence.currentBestOffer.title}
+              currentPrice={priceIntelligence.currentBestOffer.totalPrice}
+            />
+          )}
+
         {!isLoading && hasSearched && history.length > 0 && (
-          <div className="mb-8">
-            <PriceHistoryChart data={history} />
-          </div>
+          <PriceHistoryChart data={history} />
         )}
 
         {!isLoading && hasSearched && filteredProducts.length === 0 ? (
