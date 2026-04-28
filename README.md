@@ -1,41 +1,19 @@
 # PriceCompare
 
-A price comparison web app built for portfolio purposes.
+A fullstack price tracking app with WhatsApp alerts.
 
-## 🚀 Features
-
+## Features
 - Product search
-- Compare prices across multiple stores
-- Sorting by:
-  - Lowest price
-  - Lowest total (price + shipping)
-  - Best rating
-  - Fastest delivery
-- Highlight best deal
-- Responsive UI
+- Price comparison
+- Price intelligence (best offer, average)
+- Price alerts via WhatsApp
+- Automated checks with cron jobs
 
-## 🛠 Tech Stack
-
+## Tech Stack
 - Next.js
-- TypeScript
-- Tailwind CSS
+- Prisma + PostgreSQL (Neon)
+- Twilio (WhatsApp API)
+- Vercel
 
-## 📌 Purpose
-
-This project simulates a real-world price comparison platform, allowing users to evaluate different offers and choose the best value.
-
-## 🔮 Future Improvements
-
-- Integration with real APIs
-- Favorites (localStorage)
-- Price history tracking
-- User authentication
-- Backend with database
-
-## 🌐 Live Demo
-
-(Deploy link here)
-
-## 📷 Screenshots
-
-(Add images here)
+## Live Demo
+https://price-compare-livid.vercel.app
